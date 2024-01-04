@@ -1,0 +1,8 @@
+**/application.properties
+**/plan.txt
+
+**/.idea/
+**/target/
+**/.git/
+**/.vs/
+**/node_modules/

@@ -11,7 +11,6 @@ import java.util.List;
 @Table(name = "subtasks")
 public class Subtask {
     @Id
-    @Column(name = "subtask_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 

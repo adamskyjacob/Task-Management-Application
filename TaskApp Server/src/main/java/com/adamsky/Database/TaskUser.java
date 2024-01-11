@@ -30,5 +30,5 @@ public class TaskUser {
         this.user = user;
     }
 
-    public TaskUser(){}
+    public TaskUser() { }
 }

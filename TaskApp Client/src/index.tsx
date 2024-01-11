@@ -46,8 +46,7 @@ function StateProvider(props: { children: any }) {
         stomp.onConnect = () => {
             setStompClient(stomp);
 
-            stomp.onStompError = handleError;
-            stomp.onWebSocketError = handleError;
+            stomp.onStompError = stomp.onWebSocketError = handleError;
 
             stomp.subscribe('/topic/taskCreated', (response) => {
                 const message = response.body;

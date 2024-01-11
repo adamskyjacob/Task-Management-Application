@@ -2,7 +2,11 @@ package com.adamsky.Database;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.security.crypto.codec.Hex;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,17 +16,19 @@ import java.util.List;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name="id")
-    public long id;
+    private long id;
 
     @Column(name="username")
-    public String username;
+    private String username;
 
     @Column(name="email", nullable = true)
-    public String email;
+    private String email;
 
     @Column(name="password")
-    public String password;
+    private String password;
+
+    @OneToOne(mappedBy = "user")
+    private UserToken userToken;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TaskUser> taskUsers = new ArrayList<>();
@@ -32,7 +38,7 @@ public class User {
         taskUser.setUser(this);
     }
 
-    public User(){}
+    public User() { }
     public User(String username, String email, String password){
         this.username = username;
         this.email = email;

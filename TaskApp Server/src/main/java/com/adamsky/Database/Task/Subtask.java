@@ -1,5 +1,7 @@
-package com.adamsky.Database;
+package com.adamsky.Database.Task;
 
+import com.adamsky.Database.TaskUser.TaskUser;
+import com.adamsky.Database.User.User;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -9,7 +11,7 @@ import java.util.List;
 @Data
 @Entity
 @Table(name = "subtasks")
-public class Subtask {
+public class Subtask extends STask{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

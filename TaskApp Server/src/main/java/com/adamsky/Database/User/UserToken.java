@@ -1,5 +1,6 @@
-package com.adamsky.Database;
+package com.adamsky.Database.User;
 
+import com.adamsky.Database.User.User;
 import jakarta.persistence.*;
 import lombok.Data;
 

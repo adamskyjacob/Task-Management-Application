@@ -1,14 +1,15 @@
-package com.adamsky.RestAPI;
+package com.adamsky.RestAPI.Login;
 
+import com.adamsky.RestAPI.CredentialResponse;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class RegisterSuccess extends CredentialResponse {
+public class LoginSuccess extends CredentialResponse {
     String token;
 
-    public RegisterSuccess(String token){
+    public LoginSuccess(String token){
         this.token = token;
     }
 

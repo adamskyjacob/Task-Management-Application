@@ -1,4 +1,4 @@
-package com.adamsky.RestAPI;
+package com.adamsky.RestAPI.Register;
 
 import lombok.Data;
 

@@ -1,5 +1,8 @@
-package com.adamsky.Database;
+package com.adamsky.Database.TaskUser;
 
+import com.adamsky.Database.Task.Subtask;
+import com.adamsky.Database.Task.Task;
+import com.adamsky.Database.User.User;
 import jakarta.persistence.*;
 import lombok.Data;
 

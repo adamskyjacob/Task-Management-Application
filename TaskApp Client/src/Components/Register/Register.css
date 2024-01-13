@@ -1,11 +1,12 @@
 
-body {
+.register_body {
     margin: 0;
     overflow: hidden;
-    background: radial-gradient(circle at 50% 50%, #2397f8, #97dfff);
+    background: radial-gradient(circle at 50% 50%, purple, black);
     animation: rotateGradient 10s linear infinite;
     display: flex !important;
     height: 100vh !important;
+    width: 100vw !important;
 }
 
 @keyframes rotateGradient {
@@ -41,9 +42,10 @@ body {
             width: 150px;
             text-decoration: none;
         }
-        .register .login_redirect a:hover {
-            color: #174fc2;
-        }
+
+            .register .login_redirect a:hover {
+                color: #174fc2;
+            }
 
     .register .register_form {
         width: 250px;

@@ -1,12 +1,14 @@
 
-body {
+.login_body {
     margin: 0;
     overflow: hidden;
-    background: radial-gradient(circle at 50% 50%, #2397f8, #97dfff);
+    background: radial-gradient(circle at 50% 50%, purple, black);
     animation: rotateGradient 10s linear infinite;
     display: flex !important;
     height: 100vh !important;
+    width: 100vw !important;
 }
+
 
 @keyframes rotateGradient {
     0% {

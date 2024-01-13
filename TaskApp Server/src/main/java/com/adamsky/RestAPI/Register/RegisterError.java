@@ -1,5 +1,6 @@
-package com.adamsky.RestAPI;
+package com.adamsky.RestAPI.Register;
 
+import com.adamsky.RestAPI.CredentialResponse;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.http.HttpStatus;

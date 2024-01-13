@@ -1,7 +1,24 @@
 package com.adamsky.RestAPI;
 
-import com.adamsky.Database.*;
+import com.adamsky.Database.Task.Task;
+import com.adamsky.Database.Task.TaskRepository;
+import com.adamsky.Database.Task.TaskRequest;
+import com.adamsky.Database.TaskUser.TaskUser;
+import com.adamsky.Database.TaskUser.TaskUserRepository;
+import com.adamsky.Database.User.User;
+import com.adamsky.Database.User.UserRepository;
+import com.adamsky.Database.User.UserToken;
+import com.adamsky.Database.User.UserTokenRepository;
+import com.adamsky.RestAPI.Login.LoginError;
+import com.adamsky.RestAPI.Login.LoginRequest;
+import com.adamsky.RestAPI.Login.LoginSuccess;
+import com.adamsky.RestAPI.Register.RegisterError;
+import com.adamsky.RestAPI.Register.RegisterRequest;
+import com.adamsky.RestAPI.Register.RegisterSuccess;
+import com.adamsky.RestAPI.TokenValidation.TokenValidation;
+import com.adamsky.RestAPI.TokenValidation.TokenValidationRequest;
 import io.jsonwebtoken.Jwts;
+import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -20,10 +37,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
-
-import static com.adamsky.TaskApplication.print;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:3000")
@@ -33,11 +50,6 @@ public class CredentialController {
     private final TaskRepository taskRepository;
     private final TaskUserRepository taskUserRepository;
     private final UserTokenRepository userTokenRepository;
-
-    @Scheduled(cron = "0 0 0 * * *")
-    public void clearUserTokensAtMidnight() {
-        userTokenRepository.deleteAll();
-    }
 
     @Autowired
     public CredentialController(UserRepository userRepository, TaskRepository taskRepository, TaskUserRepository taskUserRepository, UserTokenRepository userTokenRepository){
@@ -52,6 +64,44 @@ public class CredentialController {
 
         TaskUser taskUser = new TaskUser(null, null, user);
         taskUserRepository.save(taskUser);
+    }
+
+    @GetMapping(value = "/get_tasks", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<Task>> getTasksForUser(@RequestParam String username){
+        List<Task> tasks = taskRepository.findAllByTaskUsersUserUsername(username);
+        HttpStatus status;
+        if(tasks.isEmpty()){
+            status = HttpStatus.NOT_FOUND;
+            return ResponseEntity.status(status).body(tasks);
+        }
+
+        status = HttpStatus.ACCEPTED;
+        return ResponseEntity.status(status).body(tasks);
+    }
+
+    @PostMapping(value = "/validate_token", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<TokenValidation> postValidateToken(@RequestBody TokenValidationRequest request) {
+        HttpStatus status;
+        System.out.println(request.getIdentifier());
+        Optional<User> user = userRepository.findByUsername(request.getIdentifier());
+        if(user.isEmpty()){
+            status = HttpStatus.NOT_FOUND;
+            return ResponseEntity.status(status).body(new TokenValidation(false));
+        }
+
+        Optional<UserToken> userToken = userTokenRepository.findById(user.get().getId());
+        if(userToken.isEmpty()){
+            status = HttpStatus.FORBIDDEN;
+            return ResponseEntity.status(status).body(new TokenValidation(false));
+        }
+
+        if(userToken.get().getToken().equals(request.getToken())){
+            status = HttpStatus.ACCEPTED;
+            return ResponseEntity.status(status).body(new TokenValidation(true));
+        }
+
+        status = HttpStatus.INTERNAL_SERVER_ERROR;
+        return ResponseEntity.status(status).body(new TokenValidation(false));
     }
 
     @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -101,23 +151,24 @@ public class CredentialController {
 
         User user = optionalUser.get();
         Optional<UserToken> userToken = userTokenRepository.findByUserUsername(user.getUsername());
-        if(passwordEncoder.matches(request.password, user.getPassword())){
-            if(userToken.isEmpty()) {
-                try {
-                    userToken = Optional.of(new UserToken(user, generateToken(user.getUsername())));
-                    userTokenRepository.save(userToken.get());
-                } catch (NoSuchAlgorithmException | IOException e) {
-                    status = HttpStatus.INTERNAL_SERVER_ERROR;
-                    return ResponseEntity.status(status).body(LoginError.from(status));
-                }
-            }
 
-            CredentialResponse response = new LoginSuccess(userToken.get().getToken());
-            return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
+        if(!passwordEncoder.matches(request.password, user.getPassword())){
+            status = HttpStatus.FORBIDDEN;
+            return ResponseEntity.status(status).body(LoginError.from(status));
         }
 
-        status = HttpStatus.FORBIDDEN;
-        return ResponseEntity.status(status).body(LoginError.from(status));
+        if(userToken.isEmpty()) {
+            try {
+                userToken = Optional.of(new UserToken(user, generateToken(user.getUsername())));
+                userTokenRepository.save(userToken.get());
+            } catch (NoSuchAlgorithmException | IOException e) {
+                status = HttpStatus.INTERNAL_SERVER_ERROR;
+                return ResponseEntity.status(status).body(LoginError.from(status));
+            }
+        }
+
+        CredentialResponse response = new LoginSuccess(userToken.get().getToken());
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }
 
 

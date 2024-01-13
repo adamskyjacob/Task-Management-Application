@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 
-import com.adamsky.Database.Task;
+import com.adamsky.Database.Task.Task;
 
 @Controller
 @CrossOrigin(origins = "http://localhost:3000")

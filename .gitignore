@@ -1,6 +1,8 @@
 **/application.properties
 **/plan.txt
 **/secret-key.key
+**/keystorepw.txt
+**/keystore.jks
 
 **/.idea/
 **/target/

@@ -1,11 +1,14 @@
 import "./Register.css";
 
-import { apiURL } from "../../api/Common";
 import RegisterPayload from "../../api/RegisterPayload";
-import { FormEvent, useEffect } from "react";
+import { apiURL } from "../../api/Common";
+import { FormEvent, useContext, useEffect } from "react";
+import { TaskContext } from "../..";
 
 export default function Register() {
+    const { redirect } = useContext(TaskContext);
     const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/;
+
     function handleRegister(evt: FormEvent) {
         evt.preventDefault();
         const identifier = (document.querySelector(".identifier") as HTMLInputElement).value
@@ -22,9 +25,12 @@ export default function Register() {
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
-        }).then(data => {
-            console.log('Registration successful:', data);
-            // Handle the successful registration response
+            response.json().then((json: { token: string }) => {
+                sessionStorage.setItem("token", json.token);
+                sessionStorage.setItem("identifier", isEmail ? identifier.split("@")[0] : identifier);
+            });
+        }).then(() => {
+            redirect("/Home");
         }).catch(error => {
             console.error('Error during registration:', error);
             // Handle errors, e.g., duplicate user, server errors, etc.
@@ -50,32 +56,34 @@ export default function Register() {
     }, []);
 
     return (
-        <div className="register">
-            <div className="login_redirect">
-                <img src="./swap.svg" />
-                <a href="/Login">Login instead?</a>
-            </div>
-            <form className="register_form" onSubmit={handleRegister}>
-                <div className="register_title">
-                    <u>Member Registration</u>
+        <div className="register_body">
+            <div className="register">
+                <div className="login_redirect">
+                    <img src="./swap.svg" />
+                    <a href="/Login">Login instead?</a>
                 </div>
-                <div className="register_type_div">
-                    <input className="identifier" required type="email" placeholder="Email" onBlur={checkValid} onChange={checkValid} onInput={checkValid} />
-                    <div className="register_type" data-checked="false" onClick={function (evt) {
-                        const input = (document.querySelector(".identifier") as HTMLInputElement);
-                        input.placeholder = input.placeholder === "Email" ? "Username" : "Email";
-                        input.type = input.type === "email" ? "text" : "email";
-                        input.value = "";
-
-                        const img = (evt.target as HTMLDivElement).querySelector("img") as HTMLImageElement;
-                        img.src = img.src.includes("/email.svg") ? "./user.svg" : "./email.svg";
-                    }}>
-                        <img src="./email.svg"></img>
+                <form className="register_form" onSubmit={handleRegister}>
+                    <div className="register_title">
+                        <u>Member Registration</u>
                     </div>
-                </div>
-                <input className="password" required type="password" onBlur={checkValid} onChange={checkValid} onInput={checkValid} minLength={12} placeholder="Password" />
-                <button className="register_button" type="submit" disabled={true}>Register</button>
-            </form>
+                    <div className="register_type_div">
+                        <input className="identifier" required type="email" placeholder="Email" onBlur={checkValid} onChange={checkValid} onInput={checkValid} />
+                        <div className="register_type" data-checked="false" onClick={function (evt) {
+                            const input = (document.querySelector(".identifier") as HTMLInputElement);
+                            input.placeholder = input.placeholder === "Email" ? "Username" : "Email";
+                            input.type = input.type === "email" ? "text" : "email";
+                            input.value = "";
+
+                            const img = (evt.target as HTMLDivElement).querySelector("img") as HTMLImageElement;
+                            img.src = img.src.includes("/email.svg") ? "./user.svg" : "./email.svg";
+                        }}>
+                            <img src="./email.svg"></img>
+                        </div>
+                    </div>
+                    <input className="password" required type="password" onBlur={checkValid} onInput={checkValid} minLength={12} placeholder="Password" />
+                    <button className="register_button" type="submit" disabled={true}>Register</button>
+                </form>
+            </div>
         </div>
     )
 }

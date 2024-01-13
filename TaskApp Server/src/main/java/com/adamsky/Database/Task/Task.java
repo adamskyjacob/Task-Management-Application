@@ -1,5 +1,7 @@
-package com.adamsky.Database;
+package com.adamsky.Database.Task;
 
+import com.adamsky.Database.TaskUser.TaskUser;
+import com.adamsky.Database.User.User;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -9,8 +11,7 @@ import java.util.List;
 @Data
 @Entity
 @Table(name = "tasks")
-public class Task {
-
+public class Task extends STask {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	public Long id;
@@ -20,9 +21,6 @@ public class Task {
 
 	@OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<TaskUser> taskUsers = new ArrayList<>();
-
-	@Column(name = "description")
-	public String description;
 
 	public void addSubtask(Subtask subtask) {
 		subtasks.add(subtask);

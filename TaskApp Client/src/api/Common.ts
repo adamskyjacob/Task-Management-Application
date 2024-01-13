@@ -1,4 +1,4 @@
-export const apiURL = "http://localhost:8080";
+export const apiURL = "https://localhost:8443";
 export const usernameRegex = /^[A-Za-z0-9.]*$/;
 export const validateEmail = (email: string) => {
     const split = email.split("@");

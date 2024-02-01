@@ -1,0 +1,4 @@
+03:01:24.381 [main] INFO  com.adamsky.TaskApplication - Starting TaskApplication...
+03:01:24.742 [main] INFO  com.adamsky.TaskApplication - Starting TaskApplication using Java 17.0.8 with PID 9952 (C:\Users\docto\OneDrive\Desktop\Git Repos\TaskApp\TaskApp Server\target\classes started by docto in C:\Users\docto\OneDrive\Desktop\Git Repos\TaskApp\TaskApp Server)
+03:01:24.747 [main] INFO  com.adamsky.TaskApplication - No active profile set, falling back to 1 default profile: "default"
+03:01:29.178 [main] INFO  com.adamsky.TaskApplication - Started TaskApplication in 4.724 seconds (process running for 5.395)

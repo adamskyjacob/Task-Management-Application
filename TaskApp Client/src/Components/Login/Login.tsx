@@ -1,12 +1,12 @@
 import "./Login.css";
 
-import { FormEvent, useContext } from "react";
-import { apiURL } from "../../api/Common";
-import LoginPayload from "../../api/LoginPayload";
+import { FormEvent, useContext, useEffect } from "react";
+import { apiURL, passRegex } from "../../api/Common/Common";
+import LoginPayload from "../../api/Credentials/LoginPayload";
 import { TaskContext } from "../..";
 
 export default function Login() {
-    const { redirect } = useContext(TaskContext);
+    const { redirect, socket } = useContext(TaskContext);
 
     function handleLogin(evt: FormEvent) {
         evt.preventDefault();
@@ -15,9 +15,9 @@ export default function Login() {
         const password = (document.querySelector(".password") as HTMLInputElement).value;
 
         fetch(`${apiURL}/login`, {
-            method: 'POST',
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json'
+                "Content-Type": "application/json"
             },
             body: new LoginPayload(identifier, isEmail, password).asPayloadString()
         }).then(response => {
@@ -25,13 +25,29 @@ export default function Login() {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
             return response.json();
-        }).then((json: { token: string }) => {
-            sessionStorage.setItem("token", json.token);
-            sessionStorage.setItem("identifier", isEmail ? identifier.split("@")[0] : identifier);
-            redirect("/Home");
+        }).then((json) => {
+            if (socket) {
+                sessionStorage.setItem("token", json.token);
+                sessionStorage.setItem("user_id", json.id);
+                sessionStorage.setItem("identifier", isEmail ? identifier.split("@")[0] : identifier);
+
+                socket.publish({
+                    destination: "/app/toggleActive",
+                    body: JSON.stringify({
+                        userId: json.id,
+                        token: json.token,
+                        type: "LOGIN"
+                    })
+                })
+
+                if (redirect) {
+                    redirect("/Home");
+                }
+            } else {
+                throw new Error("WebSocket not connected.");
+            }
         }).catch(error => {
-            console.error('Error during registration:', error);
-            // Handle errors, e.g., duplicate user, server errors, etc.
+            console.error("Error during registration:", error);
         });
     }
 
@@ -39,6 +55,19 @@ export default function Login() {
         const button = document.querySelector(".login_button") as HTMLButtonElement;
         button.disabled = !(document.querySelector("form")?.checkValidity());
     }
+
+    useEffect(() => {
+        (document.querySelector(".login_form") as HTMLFormElement).checkValidity = () => {
+            const identifierInput = document.querySelector(".identifier") as HTMLInputElement;
+            const passwordInput = document.querySelector(".password") as HTMLInputElement;
+
+            if (identifierInput.value === "") {
+                return false;
+            }
+
+            return passRegex.test(passwordInput.value);
+        }
+    }, []);
 
     return (
         <div className="login_body">

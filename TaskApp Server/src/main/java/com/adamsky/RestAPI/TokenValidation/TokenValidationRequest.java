@@ -6,4 +6,9 @@ import lombok.Data;
 public class TokenValidationRequest {
     private String token;
     private String identifier;
+
+    public TokenValidationRequest(String token, String identifier){
+        this.token = token;
+        this.identifier = identifier;
+    }
 }

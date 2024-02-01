@@ -2,10 +2,13 @@ package com.adamsky.Database.Task;
 
 import lombok.Data;
 
-import java.util.Optional;
-
 @Data
 public class TaskRequest {
-    String username;
-    Long taskId;
+    private String username;
+    private Long taskId;
+
+    public TaskRequest(String username, Long taskId){
+        this.username = username;
+        this.taskId = taskId;
+    }
 }

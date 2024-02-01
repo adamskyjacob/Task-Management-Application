@@ -1,6 +1,6 @@
 package com.adamsky.RestAPI.Login;
 
-import com.adamsky.RestAPI.CredentialResponse;
+import com.adamsky.RestAPI.Credential.CredentialResponse;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.http.HttpStatus;
@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class LoginError extends CredentialResponse {
-    String errorMessage;
+    private String errorMessage;
     public LoginError(String errorMessage) {
         this.errorMessage = errorMessage;
     }

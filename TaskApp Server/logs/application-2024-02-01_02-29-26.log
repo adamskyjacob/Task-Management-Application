@@ -1,0 +1,6 @@
+02:29:26.588 [main] INFO  com.adamsky.TaskApplication - Starting TaskApplication...
+02:29:26.952 [main] INFO  com.adamsky.TaskApplication - Starting TaskApplication using Java 17.0.8 with PID 12148 (C:\Users\docto\OneDrive\Desktop\Git Repos\TaskApp\TaskApp Server\target\classes started by docto in C:\Users\docto\OneDrive\Desktop\Git Repos\TaskApp\TaskApp Server)
+02:29:26.958 [main] INFO  com.adamsky.TaskApplication - No active profile set, falling back to 1 default profile: "default"
+02:29:31.165 [main] INFO  com.adamsky.TaskApplication - Started TaskApplication in 4.509 seconds (process running for 5.239)
+02:29:39.249 [https-jsse-nio-8443-exec-6] INFO  com.adamsky.TaskApplication - Token validation success for UID 1.
+02:29:39.249 [https-jsse-nio-8443-exec-1] INFO  com.adamsky.TaskApplication - Token validation success for UID 1.

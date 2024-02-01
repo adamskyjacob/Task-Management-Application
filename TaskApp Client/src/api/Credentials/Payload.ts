@@ -1,4 +1,4 @@
-import { AnyMessage } from "./MessageTypes";
+import { AnyMessage } from "../Common/MessageTypes";
 import { PayloadStringable } from "./PayloadStringable";
 
 export default class Payload extends PayloadStringable {

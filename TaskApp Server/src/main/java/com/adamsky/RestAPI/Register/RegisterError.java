@@ -1,6 +1,6 @@
 package com.adamsky.RestAPI.Register;
 
-import com.adamsky.RestAPI.CredentialResponse;
+import com.adamsky.RestAPI.Credential.CredentialResponse;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.http.HttpStatus;
@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class RegisterError extends CredentialResponse {
-    String error;
+    private String error;
 
     public RegisterError(String error) {
         this.error = error;

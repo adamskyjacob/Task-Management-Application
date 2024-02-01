@@ -4,9 +4,9 @@ import lombok.Data;
 
 @Data
 public class LoginRequest {
-    public String identifier;
-    public Boolean isEmail;
-    public String password;
+    private String identifier;
+    private Boolean isEmail;
+    private String password;
 
     public LoginRequest(String identifier,  Boolean isEmail, String password){
         this.identifier = identifier;

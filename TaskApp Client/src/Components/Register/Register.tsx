@@ -1,13 +1,12 @@
 import "./Register.css";
 
-import RegisterPayload from "../../api/RegisterPayload";
-import { apiURL } from "../../api/Common";
+import RegisterPayload from "../../api/Credentials/RegisterPayload";
+import { apiURL, passRegex } from "../../api/Common/Common";
 import { FormEvent, useContext, useEffect } from "react";
 import { TaskContext } from "../..";
 
 export default function Register() {
     const { redirect } = useContext(TaskContext);
-    const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/;
 
     function handleRegister(evt: FormEvent) {
         evt.preventDefault();
@@ -16,24 +15,25 @@ export default function Register() {
         const password = (document.querySelector(".password") as HTMLInputElement).value;
 
         fetch(`${apiURL}/register`, {
-            method: 'POST',
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json'
+                "Content-Type": "application/json"
             },
             body: new RegisterPayload(identifier, isEmail, password).asPayloadString()
         }).then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
-            response.json().then((json: { token: string }) => {
-                sessionStorage.setItem("token", json.token);
-                sessionStorage.setItem("identifier", isEmail ? identifier.split("@")[0] : identifier);
-            });
-        }).then(() => {
-            redirect("/Home");
+            return response.json();
+        }).then((json) => {
+            sessionStorage.setItem("token", json.token);
+            sessionStorage.setItem("user_id", json.id);
+            sessionStorage.setItem("identifier", isEmail ? identifier.split("@")[0] : identifier);
+            if (redirect) {
+                redirect("/Home");
+            }
         }).catch(error => {
-            console.error('Error during registration:', error);
-            // Handle errors, e.g., duplicate user, server errors, etc.
+            console.error("Error during registration:", error);
         });
     }
 

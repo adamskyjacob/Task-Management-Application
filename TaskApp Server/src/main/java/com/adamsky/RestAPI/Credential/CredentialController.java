@@ -1,8 +1,5 @@
-package com.adamsky.RestAPI;
+package com.adamsky.RestAPI.Credential;
 
-import com.adamsky.Database.Task.Task;
-import com.adamsky.Database.Task.TaskRepository;
-import com.adamsky.Database.Task.TaskRequest;
 import com.adamsky.Database.TaskUser.TaskUser;
 import com.adamsky.Database.TaskUser.TaskUserRepository;
 import com.adamsky.Database.User.User;
@@ -17,15 +14,15 @@ import com.adamsky.RestAPI.Register.RegisterRequest;
 import com.adamsky.RestAPI.Register.RegisterSuccess;
 import com.adamsky.RestAPI.TokenValidation.TokenValidation;
 import com.adamsky.RestAPI.TokenValidation.TokenValidationRequest;
+
 import io.jsonwebtoken.Jwts;
-import org.apache.coyote.Response;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,69 +34,57 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
+
+import static com.adamsky.TaskApplication.logger;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:3000")
 public class CredentialController {
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private final UserRepository userRepository;
-    private final TaskRepository taskRepository;
     private final TaskUserRepository taskUserRepository;
     private final UserTokenRepository userTokenRepository;
 
     @Autowired
-    public CredentialController(UserRepository userRepository, TaskRepository taskRepository, TaskUserRepository taskUserRepository, UserTokenRepository userTokenRepository){
+    public CredentialController(UserRepository userRepository, TaskUserRepository taskUserRepository, UserTokenRepository userTokenRepository){
         this.userRepository = userRepository;
-        this.taskRepository = taskRepository;
         this.taskUserRepository = taskUserRepository;
         this.userTokenRepository = userTokenRepository;
     }
 
     private void registerUser(User user){
-        userRepository.save(user);
+        this.userRepository.save(user);
 
         TaskUser taskUser = new TaskUser(null, null, user);
-        taskUserRepository.save(taskUser);
+        this.taskUserRepository.save(taskUser);
     }
 
-    @GetMapping(value = "/get_tasks", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<Task>> getTasksForUser(@RequestParam String username){
-        List<Task> tasks = taskRepository.findAllByTaskUsersUserUsername(username);
-        HttpStatus status;
-        if(tasks.isEmpty()){
-            status = HttpStatus.NOT_FOUND;
-            return ResponseEntity.status(status).body(tasks);
-        }
-
-        status = HttpStatus.ACCEPTED;
-        return ResponseEntity.status(status).body(tasks);
-    }
-
-    @PostMapping(value = "/validate_token", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/validateToken", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<TokenValidation> postValidateToken(@RequestBody TokenValidationRequest request) {
         HttpStatus status;
-        System.out.println(request.getIdentifier());
-        Optional<User> user = userRepository.findByUsername(request.getIdentifier());
+        Optional<User> user = this.userRepository.findByUsername(request.getIdentifier());
         if(user.isEmpty()){
+            logger.warn("No user provided for token validation request.");
             status = HttpStatus.NOT_FOUND;
             return ResponseEntity.status(status).body(new TokenValidation(false));
         }
 
-        Optional<UserToken> userToken = userTokenRepository.findById(user.get().getId());
+        Optional<UserToken> userToken = this.userTokenRepository.findByUserId(user.get().getId());
         if(userToken.isEmpty()){
+            logger.warn("Couldn't find user token for user.");
             status = HttpStatus.FORBIDDEN;
             return ResponseEntity.status(status).body(new TokenValidation(false));
         }
 
         if(userToken.get().getToken().equals(request.getToken())){
+            logger.info(String.format("Token validation success for UID %d.", user.get().getId()));
             status = HttpStatus.ACCEPTED;
             return ResponseEntity.status(status).body(new TokenValidation(true));
         }
 
+        logger.warn("Not sure what happened here!");
         status = HttpStatus.INTERNAL_SERVER_ERROR;
         return ResponseEntity.status(status).body(new TokenValidation(false));
     }
@@ -108,43 +93,50 @@ public class CredentialController {
     public ResponseEntity<CredentialResponse> postRegister(@RequestBody RegisterRequest request) {
         User user;
         HttpStatus status;
-        if(request.isEmail){
-            String username = request.identifier.split("@")[0];
-            if(userRepository.findByUsername(username).isPresent()){
-                status = HttpStatus.CONFLICT;
-                return ResponseEntity.status(status).body(RegisterError.from(status));
-            }
-            user = new User(username, request.identifier, passwordEncoder.encode(request.password));
-            registerUser(user);
-        } else {
-            if(userRepository.findByEmail(request.identifier).isPresent()){
+        if(request.getIsEmail()){
+            if(this.userRepository.findByEmail(request.getIdentifier()).isPresent()){
+                logger.info(String.format("Duplicate user registration attempt with email %s.", request.getIdentifier()));
                 status = HttpStatus.CONFLICT;
                 return ResponseEntity.status(status).body(RegisterError.from(status));
             }
 
-            user = new User(request.identifier, null, passwordEncoder.encode(request.password));
+            user = new User(request.getIdentifier(), null, this.passwordEncoder.encode(request.getPassword()));
             registerUser(user);
+            logger.info(String.format("Registered user using username with UID %d.", user.getId()));
+        } else {
+            if(this.userRepository.findByUsername(request.getIdentifier()).isPresent()){
+                logger.info(String.format("Duplicate user registration attempt for username %s.", request.getIdentifier()));
+                status = HttpStatus.CONFLICT;
+                return ResponseEntity.status(status).body(RegisterError.from(status));
+            }
+
+            user = new User(request.getIdentifier(), request.getIdentifier(), this.passwordEncoder.encode(request.getPassword()));
+            registerUser(user);
+            logger.info(String.format("Registered user using email with UID %d.", user.getId()));
         }
 
-        Optional<UserToken> userToken = userTokenRepository.findByUserUsername(user.getUsername());
+        Optional<UserToken> userToken = this.userTokenRepository.findByUserUsername(user.getUsername());
         if(userToken.isEmpty()){
             try {
                 userToken = Optional.of(new UserToken(user, generateToken(user.getUsername())));
-                userTokenRepository.save(userToken.get());
+                this.userTokenRepository.save(userToken.get());
             } catch (NoSuchAlgorithmException | IOException e) {
+                logger.warn(String.format("generateToken failed for UID %d.", user.getId()));
                 status = HttpStatus.INTERNAL_SERVER_ERROR;
                 return ResponseEntity.status(status).body(RegisterError.from(status));
             }
         }
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(new RegisterSuccess(userToken.get().getToken()));
+        CredentialResponse response = new RegisterSuccess(userToken.get().getToken(), user.getId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CredentialResponse> postLogin(@RequestBody LoginRequest request) {
         HttpStatus status;
-        Optional<User> optionalUser = request.isEmail ? userRepository.findByEmail(request.identifier) : userRepository.findByUsername(request.identifier);
+        Optional<User> optionalUser = request.getIsEmail() ? this.userRepository.findByEmail(request.getIdentifier()) : this.userRepository.findByUsername(request.getIdentifier());
         if(optionalUser.isEmpty()){
+            logger.warn(String.format("Failed to find user with the %s %s", request.getIsEmail() ? "email" : "username", request.getIdentifier()));
             status = HttpStatus.NOT_FOUND;
             return ResponseEntity.status(status).body(LoginError.from(status));
         }
@@ -152,7 +144,8 @@ public class CredentialController {
         User user = optionalUser.get();
         Optional<UserToken> userToken = userTokenRepository.findByUserUsername(user.getUsername());
 
-        if(!passwordEncoder.matches(request.password, user.getPassword())){
+        if(!this.passwordEncoder.matches(request.getPassword(), user.getPassword())){
+            logger.warn(String.format("Failed to find user with the %s %s", request.getIsEmail() ? "email" : "username", request.getIdentifier()));
             status = HttpStatus.FORBIDDEN;
             return ResponseEntity.status(status).body(LoginError.from(status));
         }
@@ -160,14 +153,15 @@ public class CredentialController {
         if(userToken.isEmpty()) {
             try {
                 userToken = Optional.of(new UserToken(user, generateToken(user.getUsername())));
-                userTokenRepository.save(userToken.get());
+                this.userTokenRepository.save(userToken.get());
             } catch (NoSuchAlgorithmException | IOException e) {
+                logger.warn(String.format("generateToken failed for UID %d.", user.getId()));
                 status = HttpStatus.INTERNAL_SERVER_ERROR;
                 return ResponseEntity.status(status).body(LoginError.from(status));
             }
         }
 
-        CredentialResponse response = new LoginSuccess(userToken.get().getToken());
+        CredentialResponse response = new LoginSuccess(userToken.get().getToken(), user.getId());
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }
 

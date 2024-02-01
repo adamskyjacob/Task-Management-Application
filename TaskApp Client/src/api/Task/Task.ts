@@ -5,9 +5,9 @@ export default class Task extends TaskSuperclass {
     constructor(
         public owner: number,
         public subtasks: Subtask[],
-        id: number,
         users: number[],
         description: string,
-        deadline: Date
-    ) { super(id, users, description, deadline) }
+        deadline: Date,
+        id?: number
+    ) { super(users, description, deadline.toISOString().split("T")[0], id) }
 }

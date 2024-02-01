@@ -1,6 +1,9 @@
 package com.adamsky.Database.User;
 
 import com.adamsky.Database.User.User;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIdentityReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -15,6 +18,8 @@ public class UserToken {
 
     @OneToOne
     @JoinColumn(name = "user_id")
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIdentityReference(alwaysAsId = true)
     private User user;
 
     @Column(name = "token")
@@ -25,5 +30,10 @@ public class UserToken {
     public UserToken(User user, String token) {
         this.user = user;
         this.token = token;
+    }
+
+    @Override
+    public String toString(){
+        return this.getToken();
     }
 }

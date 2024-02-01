@@ -1,28 +1,28 @@
-import './index.css';
+import "./index.css";
 
-import { Context, Dispatch, SetStateAction, StrictMode, createContext, useEffect, useState } from 'react';
-import { BrowserRouter, NavigateFunction, Route, Routes, useNavigate } from 'react-router-dom';
-import { Client, IFrame } from '@stomp/stompjs';
-import ReactDOM from 'react-dom/client';
-import Home from './Components/Home/Home';
-import Register from './Components/Register/Register';
-import Login from './Components/Login/Login';
-import TaskView from './Components/TaskView/TaskView';
-import TaskCreation from './Components/TaskCreation/TaskCreation';
+import { Context, Dispatch, SetStateAction, StrictMode, createContext, useEffect, useState } from "react";
+import { BrowserRouter, NavigateFunction, Route, Routes, useNavigate } from "react-router-dom";
+import { Client, IFrame } from "@stomp/stompjs";
+import ReactDOM from "react-dom/client";
+import Home from "./Components/Home/Home";
+import Register from "./Components/Register/Register";
+import Login from "./Components/Login/Login";
+import TaskView from "./Components/TaskView/TaskView";
+import TaskCreation from "./Components/TaskCreation/TaskCreation";
 
 interface TaskContextInterface {
-    socket: Client;
-    setSocket: Dispatch<SetStateAction<Client>>;
-    redirect: NavigateFunction;
+    socket: Client | null;
+    setSocket: Dispatch<SetStateAction<Client>> | null;
+    redirect: NavigateFunction | null;
 }
 
 export var TaskContext: Context<TaskContextInterface> = createContext<TaskContextInterface>({
-    socket: new Client(),
-    setSocket: () => { },
-    redirect: () => { },
+    socket: null,
+    setSocket: null,
+    redirect: null,
 });
 
-const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
+const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 
 root.render(
     <StrictMode>
@@ -45,9 +45,10 @@ function StateProvider(props: { children: any }) {
     const redirect = useNavigate();
 
     useEffect(() => {
-        const socket = new WebSocket('ws://localhost:8080/ws');
+        const socket = new WebSocket("wss://localhost:8443/ws");
         const stomp = new Client({
-            webSocketFactory: () => socket
+            webSocketFactory: () => socket,
+            reconnectDelay: 1000
         });
 
         stomp.onConnect = () => {
@@ -56,9 +57,13 @@ function StateProvider(props: { children: any }) {
 
             stomp.onStompError = stomp.onWebSocketError = handleError;
 
-            stomp.subscribe('/topic/taskCreated', (response) => {
+            stomp.subscribe("/topic/taskCreated", (response) => {
                 const message = response.body;
-                console.log('Received message:', message);
+                // eslint-disable-next-line no-restricted-globals
+                if (confirm("Would you like to view your new task?")) {
+                    redirect(`/TaskView?id=${response.body}`)
+                }
+                console.log("Received message:", message);
             });
         };
 

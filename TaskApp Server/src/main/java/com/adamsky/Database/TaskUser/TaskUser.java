@@ -3,6 +3,7 @@ package com.adamsky.Database.TaskUser;
 import com.adamsky.Database.Task.Subtask;
 import com.adamsky.Database.Task.Task;
 import com.adamsky.Database.User.User;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -23,6 +24,7 @@ public class TaskUser {
     @JoinColumn(name = "subtask_id")
     private Subtask subtask;
 
+    @JsonBackReference
     @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn(name = "user_id")
     private User user;

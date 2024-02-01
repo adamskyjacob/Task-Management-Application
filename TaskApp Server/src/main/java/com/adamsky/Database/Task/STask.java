@@ -1,15 +1,24 @@
 package com.adamsky.Database.Task;
 
 import com.adamsky.Database.User.User;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MappedSuperclass;
+import lombok.Data;
 
+import java.sql.Date;
+
+@Data
 @MappedSuperclass
 public abstract class STask {
-
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "owner_id", referencedColumnName = "id")
-    public User owner;
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
+    private User owner;
 
     @Column(name = "description")
-    public String description;
+    private String description;
+
+    @Column(name = "deadline")
+    private Date deadline;
 }

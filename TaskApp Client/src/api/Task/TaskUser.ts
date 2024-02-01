@@ -1,4 +1,4 @@
-import User from "../User";
+import User from "../Credentials/User";
 import Subtask from "./Subtask";
 import Task from "./Task";
 

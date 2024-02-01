@@ -4,6 +4,7 @@ import com.adamsky.Database.TaskUser.TaskUser;
 import com.adamsky.Database.User.User;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.List;
 @Data
 @Entity
 @Table(name = "subtasks")
+@EqualsAndHashCode(callSuper = true)
 public class Subtask extends STask{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,7 +22,7 @@ public class Subtask extends STask{
     @JoinColumn(name = "task_id")
     private Task task;
 
-    @OneToMany(mappedBy = "subtask", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy ="subtask", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<TaskUser> taskUsers = new ArrayList<>();
 
     public void addUser(User user) {
@@ -29,5 +31,9 @@ public class Subtask extends STask{
         user.getTaskUsers().add(taskUser);
     }
 
-    public Subtask(){}
+    public void addTaskUser(TaskUser taskUser){
+        this.taskUsers.add(taskUser);
+    }
+
+    public Subtask(){ }
 }

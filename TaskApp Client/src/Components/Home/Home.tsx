@@ -1,11 +1,14 @@
-import { useEffect, useState } from "react";
-import { apiURL } from "../../api/Common";
-import { TokenValidationRequest } from "../../api/TokenValidationRequest";
+import { useContext, useEffect, useState } from "react";
+import { apiURL } from "../../api/Common/Common";
+import { TokenValidationRequest } from "../../api/Credentials/TokenValidationRequest";
+import { TaskContext } from "../..";
 
 export default function Home() {
     const [authed, setAuthed] = useState<boolean>(false);
     const [identifier, setIdentifier] = useState<string | null>(sessionStorage.getItem("identifier"));
     const [token, setToken] = useState<string | null>(sessionStorage.getItem("token"));
+
+    const { redirect } = useContext(TaskContext);
 
     useEffect(() => {
         if (!token || !identifier) {
@@ -13,18 +16,23 @@ export default function Home() {
             return;
         }
         if (token && identifier) {
-            fetch(`${apiURL}/validate_token`, {
-                method: 'POST',
+            fetch(`${apiURL}/validateToken`, {
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json'
+                    "Content-Type": "application/json"
                 },
                 body: new TokenValidationRequest(token, identifier).asPayloadString()
             }).then((res) => {
-                res.json().then((json: { valid: boolean }) => {
-                    setAuthed(json.valid);
-                });
+                if (!res.ok) {
+                    if (window.confirm("Invalid token, log back in?") && redirect) {
+                        redirect("/Login");
+                    }
+                } else {
+                    res.json().then((json: { valid: boolean }) => {
+                        setAuthed(json.valid);
+                    });
+                }
             }).catch((err) => {
-                console.log(err)
             })
         }
     }, [token, identifier]);
